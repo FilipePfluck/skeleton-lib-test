@@ -1,19 +1,23 @@
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useState } from "react"
 
-const Shimmer = ({ children, isLoading, component: Component, exampleProps }) => {
+const Shimmer = ({ children, isLoading, component: Component, exampleProps, defaultStyles = {}, className }) => {
     const fakeComponentRef = useRef(null)
 
+    const [show, setShow] = useState(false)
+
     useEffect(()=>{
-        console.log(fakeComponentRef.current.children)
-    },[fakeComponentRef])
+        setTimeout(()=>{
+            setShow(true)
+        },1)
+    })
     
     const texts = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
-    const contents = ['img', 'video', 'button']
+    const contents = ['img', 'video', 'button', 'input', 'textarea', 'select']
 
-    const styleProps = ['borderRadius', 'padding', 'margin', 'marginRight', 'marginLeft', 'marginTop', 'marginBottom', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'display', 'alignItems', 'justifyContent', 'flexDirection']
+    const styleProps = ['borderRadius', 'padding', 'margin', 'marginRight', 'marginLeft', 'marginTop', 'marginBottom', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'display', 'alignItems', 'justifyContent', 'flexDirection', 'gridTemplateColumns', 'gridTemplateRows', 'gridGap', 'columnGap', 'rowGap', 'gap', 'gridTemplateAreas' ]
 
     const renderElement = (element) => {
-        console.log('renderElement')
+        console.log('renderElement', document.defaultView.getComputedStyle(element, null))
 
         const object = {}
         styleProps.forEach(s => Object.assign(object, {[s]: element.style[s]}))
@@ -37,12 +41,14 @@ const Shimmer = ({ children, isLoading, component: Component, exampleProps }) =>
                         style={{
                             width: element.offsetWidth,
                             ...object,
+                            ...defaultStyles,
                             height: fontSize,
                             marginBottom: lineMarginBottom
                         }}
-                        className="shimmer"
+                        className={`shimmer ${className}`}
                         key={"line"+line}
-                    />))}
+                    />))
+                    }
                 </div>  
             )
         }
@@ -53,9 +59,10 @@ const Shimmer = ({ children, isLoading, component: Component, exampleProps }) =>
                     style={{
                         width: element.offsetWidth,
                         height: element.offsetHeight,
-                        ...object
+                        ...object,
+                        ...defaultStyles
                     }}
-                    className={'shimmer'}
+                    className={`shimmer ${className}`}
                 />
             )
         }
@@ -70,7 +77,15 @@ const Shimmer = ({ children, isLoading, component: Component, exampleProps }) =>
                     justifyContent: element.style.justifyContent,
                     flexDirection: element.style.flexDirection,
                     padding: element.style.padding,
-                    margin: element.style.margin
+                    margin: element.style.margin,
+                    marginBottom: element.style.marginBottom,
+                    marginTop: element.style.marginTop,
+                    marginLeft: element.style.marginLeft,
+                    marginRight: element.style.marginRight,
+                    paddingTop: element.style.paddingTop,
+                    paddingBottom: element.style.paddingBottom,
+                    paddingLeft: element.style.paddingLeft,
+                    paddingRight: element.style.paddingRight
                 }}
             >
                 {!!element.children 
@@ -82,14 +97,23 @@ const Shimmer = ({ children, isLoading, component: Component, exampleProps }) =>
         )
     }
 
-    return isLoading ? (
+    /*return isLoading ? (
         <>
         <div style={{visibility: 'hidden', position: 'absolute'}} ref={fakeComponentRef}>
         <Component {...exampleProps}/>
         </div>
-        {fakeComponentRef?.current && renderElement(fakeComponentRef.current)}
+        {show && renderElement(fakeComponentRef.current)}
         </>
-    ) : children
+    ) : children*/
+
+    return (
+        <>
+            <div style={isLoading ? {visibility: 'hidden', position: 'absolute'} : {}} ref={fakeComponentRef}>
+                {{...children, props: isLoading ? exampleProps : children.props}}
+            </div>
+            {show && isLoading && renderElement(fakeComponentRef.current)}
+        </>
+    )
 }
 
 export default Shimmer
